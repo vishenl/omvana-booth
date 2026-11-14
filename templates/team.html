@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Booth Team · Omvana</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧘</text></svg>">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wdth,wght@6..144,75..125,100..900&display=swap">
+<style>
+  body{margin:0;background:#0b0b22;color:#f4f5fb;font-family:"Google Sans Flex",system-ui,sans-serif}
+  main{max-width:900px;margin:0 auto;padding:24px 16px 120px}
+  h1{font-size:30px;margin:0 0 4px} h2{margin:32px 0 10px}
+  .muted{color:#a9afcc}
+  .wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:15px}
+  td,th{padding:9px 8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left;white-space:nowrap}
+  th{color:#a9afcc;font-weight:600}
+  form{display:inline}
+  button,select{font:inherit;font-size:13px;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:#16173a;color:#fff;cursor:pointer}
+  .st-arrived{color:#86efac} .st-no-show{color:#fca5a5} .st-cancelled{color:#6c6f93;text-decoration:line-through}
+</style>
+</head>
+<body><main>
+  <h1>Booth team · {{ day }}</h1>
+  <p class="muted">{{ bookings|length }} booked · {{ waitlist|selectattr(4, 'equalto', 'waiting')|list|length }} waiting · {{ free|length }} free seats. Reload to refresh.</p>
+
+  <h2>Bookings</h2>
+  <div class="wrap"><table>
+    <tr><th>Time</th><th>Seat</th><th>Name</th><th>Meditation</th><th>Status</th><th></th></tr>
+    {% for b in bookings %}
+    <tr><td>{{ b[1] }}</td><td>{{ b[2] }}</td><td>{{ b[3] }}</td><td>{{ sessions[b[5]].name if b[5] in sessions else b[5] }}</td>
+      <td class="st-{{ b[6] }}">{{ b[6] }}</td>
+      <td>{% for st in ['arrived','no-show','cancelled','booked'] %}{% if st != b[6] %}<form method="post" action="/team/status?key={{ key }}"><input type="hidden" name="id" value="{{ b[0] }}"><input type="hidden" name="status" value="{{ st }}"><button>{{ st }}</button></form> {% endif %}{% endfor %}</td></tr>
+    {% endfor %}
+  </table></div>
+
+  <h2>Waitlist</h2>
+  <p class="muted">Mark a no-show above, then give their seat to the next person here.</p>
+  <div class="wrap"><table>
+    <tr><th>#</th><th>Name</th><th>Meditation</th><th>Status</th><th>Give a seat</th></tr>
+    {% for w in waitlist %}
+    <tr><td>{{ loop.index }}</td><td>{{ w[1] }}</td><td>{{ sessions[w[3]].name if w[3] in sessions else 'Either' }}</td><td>{{ w[4] }}</td>
+      <td>{% if w[4] == 'waiting' %}<form method="post" action="/team/promote?key={{ key }}"><input type="hidden" name="id" value="{{ w[0] }}">
+        <select name="slot">{% for b in bookings if b[6] in ('no-show','cancelled') %}<option>{{ b[1] }}</option>{% endfor %}{% for s in free %}<option>{{ s[0] }}</option>{% endfor %}</select>
+        <button>Seat them</button></form>{% endif %}</td></tr>
+    {% endfor %}
+  </table></div>
+</main></body></html>
