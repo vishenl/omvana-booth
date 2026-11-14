@@ -19,8 +19,10 @@ HOURS = float(os.environ.get("BOOTH_HOURS", "9"))
 SEATS = int(os.environ.get("BOOTH_SEATS", "2"))
 TEAM_KEY = os.environ.get("TEAM_KEY", "")
 SESSIONS = {
-    "6phase": {"name": "The 6 Phase Meditation", "who": "with Vishen Lakhiani", "mins": 17, "img": "cover-6-phase.jpg"},
-    "bliss": {"name": "Hypnotic Trance for Bliss", "who": "with Paul McKenna", "mins": 22, "img": "cover-bliss.jpg"},
+    # Three upgrades (Vishen, Sat Nov 14): confidence and resilience from Paul McKenna, connection from the 6 Phase.
+    "confidence": {"track": "Confidence upgrade", "name": "Hypnotic Trance: Instant Confidence", "who": "with Paul McKenna", "mins": 27, "img": "cover-confidence.jpg"},
+    "resilience": {"track": "Resilience upgrade", "name": "The Havening Technique", "who": "with Paul McKenna", "mins": 5, "img": "cover-havening.jpg"},
+    "6phase": {"track": "Connection upgrade", "name": "The 6 Phase Meditation", "who": "with Vishen Lakhiani", "mins": 19, "img": "cover-6-phase.jpg"},
 }
 APP_STORE = "https://apps.apple.com/app/id6827573005"
 

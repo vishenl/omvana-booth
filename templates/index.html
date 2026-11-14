@@ -20,7 +20,9 @@
   .ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.45);border-radius:16px;padding:16px 18px;margin:18px 0;font-size:17px}
   .err{background:rgba(229,72,77,.12);border:1px solid rgba(229,72,77,.45);border-radius:16px;padding:14px 18px;margin:12px 0}
   h2{font-size:24px;margin:40px 0 12px}
-  .sessions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .sessions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .trk{display:block;font-style:normal;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:10px}
+  @media (max-width:520px){.sessions{grid-template-columns:1fr 1fr}}
   .s{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;cursor:pointer;display:block}
   .s img{width:100%;aspect-ratio:1;border-radius:12px;display:block;object-fit:cover}
   .s b{display:block;margin-top:10px;font-size:16px;line-height:1.2}
@@ -49,7 +51,7 @@
 <main id="top">
   <div class="logo">OMVANA</div>
   <h1>Book a seat at the Omvana booth</h1>
-  <p class="lead">HOLOLIFE Amsterdam · {{ day }}. Two armchairs, headphones on, 30 minutes. Free.</p>
+  <p class="lead">HOLOLIFE Amsterdam · {{ day }}. Pick an upgrade: confidence, resilience or connection. Two armchairs, headphones on, 30 minutes. Free.</p>
   {% if free > 0 %}<span class="pill">{{ free }} of {{ total }} seats left</span>{% else %}<span class="pill">Fully booked · join the waitlist</span>{% endif %}
 
   {% if done == 'booked' %}<div class="ok">✅ <b>You're booked for {{ slot }}.</b> Come to the Omvana booth (Mindvalley, upstairs) 5 minutes early. If you can't make it, tell the team so someone on the waitlist gets your seat.</div>{% endif %}
@@ -58,10 +60,10 @@
 
   {% if free > 0 %}
   <form method="post" action="/book" id="book">
-    <h2>1. Choose your meditation</h2>
+    <h2>1. Choose your upgrade</h2>
     <div class="sessions">
       {% for k, s in sessions.items() %}
-      <label class="s"><img src="/static/{{ s.img }}" alt="{{ s.name }} cover"><b><input type="radio" name="session" value="{{ k }}" required>{{ s.name }}</b><span>{{ s.who }} · about {{ s.mins }} min</span></label>
+      <label class="s"><img src="/static/{{ s.img }}" alt="{{ s.name }} cover"><em class="trk">{{ s.track }}</em><b><input type="radio" name="session" value="{{ k }}" required>{{ s.name }}</b><span>{{ s.who }} · about {{ s.mins }} min</span></label>
       {% endfor %}
     </div>
     <h2>2. Choose your time</h2>
@@ -89,7 +91,7 @@
 
   <div class="app card">
     <h2>Can't get a seat? Take it home.</h2>
-    <p style="margin:0">Download Omvana. It doesn't just have these two meditations: it has <b>1,000+ meditations, curated by Vishen</b>.</p>
+    <p style="margin:0">Download Omvana. It doesn’t just have these three: it has <b>1,000+ meditations, curated by Vishen</b>.</p>
     <a class="btn" href="{{ app_store }}">Get Omvana on the App Store</a>
     <p class="note">Or visit <a href="https://omvana.com/?utm_source=hololife&utm_medium=booking" style="color:var(--ink)">omvana.com</a></p>
   </div>
