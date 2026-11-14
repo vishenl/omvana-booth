@@ -54,7 +54,7 @@
   <p class="lead">HOLOLIFE Amsterdam · {{ day }}. Pick an upgrade: confidence, resilience or connection. Two armchairs, headphones on, 30 minutes. Free.</p>
   {% if free > 0 %}<span class="pill">{{ free }} of {{ total }} seats left</span>{% else %}<span class="pill">Fully booked · join the waitlist</span>{% endif %}
 
-  {% if done == 'booked' %}<div class="ok">✅ <b>You're booked for {{ slot }}.</b> Come to the Omvana booth (Mindvalley, upstairs) 5 minutes early. If you can't make it, tell the team so someone on the waitlist gets your seat.</div>{% endif %}
+  {% if done == 'booked' %}<div class="ok">✅ <b>You're booked for {{ slot }}.</b> Come to the Omvana booth (Mindvalley, upstairs) 5 minutes early. If you can't make it, tell the team so someone on the waitlist gets your seat.{% if mailto %}<br><a href="{{ mailto }}" style="display:inline-block;margin-top:12px;background:#fff;color:#0b0b22;text-decoration:none;font-weight:700;padding:10px 18px;border-radius:99px">✉️ Send confirmation email</a>{% endif %}</div>{% endif %}
   {% if done == 'waitlist' %}<div class="ok">✅ <b>You're on the waitlist.</b> If a seat frees up, the team will call your name at the booth. Come by and check in.</div>{% endif %}
   {% if err %}<div class="err">{{ err }}</div>{% endif %}
 

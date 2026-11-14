@@ -93,7 +93,17 @@ def home():
     free = sum(1 for g in grid for x in g["seats"] if x is None)
     return render_template("index.html", grid=grid, free=free, total=len(grid) * SEATS, day=DAY, sessions=SESSIONS,
                            app_store=APP_STORE, done=request.args.get("done"), slot=request.args.get("slot"),
-                           err=request.args.get("err"))
+                           err=request.args.get("err"), mailto=confirm_mailto())
+
+
+def confirm_mailto():
+    """After a booking: a ready-to-send confirmation in the team member's own mail app (works without SendGrid)."""
+    from urllib.parse import quote
+    to, nm, ss, slot = request.args.get("to"), request.args.get("nm"), request.args.get("ss"), request.args.get("slot")
+    if request.args.get("done") != "booked" or not to or "@" not in to:
+        return None
+    subject = f"You're booked: {slot} at the Omvana booth"
+    return f"mailto:{quote(to)}?subject={quote(subject)}&body={quote(booked_email(nm or 'there', slot, ss))}"
 
 
 @app.post("/book")
@@ -114,7 +124,7 @@ def book():
     except psycopg.errors.UniqueViolation:
         return redirect(url_for("home", err=f"Someone just took {slot}. Pick another time.") + "#book")
     send_email(email, f"You're booked: {slot} at the Omvana booth", booked_email(name, slot, sess))
-    return redirect(url_for("home", done="booked", slot=slot) + "#top")
+    return redirect(url_for("home", done="booked", slot=slot, to=email, nm=name, ss=sess) + "#top")
 
 
 @app.post("/waitlist")
