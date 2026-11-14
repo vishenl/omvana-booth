@@ -78,6 +78,8 @@ def book():
         return redirect(url_for("home", err=f"Someone just took {slot}. Pick another time or join the waitlist.") + "#book")
     try:
         with db() as c:
+            # A cancelled booking still holds its (slot, seat) row; clear it so the freed seat can really be booked.
+            c.execute("DELETE FROM bookings WHERE slot=%s AND seat=%s AND status='cancelled'", (slot, seat))
             c.execute("INSERT INTO bookings (slot, seat, first_name, email, session) VALUES (%s,%s,%s,%s,%s)",
                       (slot, seat, name, email.lower(), sess))
     except psycopg.errors.UniqueViolation:
@@ -108,6 +110,25 @@ def team():
         w = c.execute("SELECT id, first_name, email, session, status, created_at FROM waitlist ORDER BY created_at").fetchall()
     return render_template("team.html", bookings=b, waitlist=w, key=TEAM_KEY, sessions=SESSIONS, day=DAY,
                            free=[(s, k) for s in slots() for k in range(1, SEATS + 1) if (s, k) not in taken()])
+
+
+@app.get("/team.csv")
+def team_csv():
+    """Every booking and waitlist entry as a spreadsheet (opens in Excel, Numbers or Google Sheets)."""
+    team_only()
+    import csv, io
+    with db() as c:
+        b = c.execute("SELECT slot, seat, first_name, email, session, status, created_at FROM bookings ORDER BY slot, seat").fetchall()
+        w = c.execute("SELECT first_name, email, session, status, created_at FROM waitlist ORDER BY created_at").fetchall()
+    out = io.StringIO()
+    wr = csv.writer(out)
+    wr.writerow(["list", "time", "seat", "first name", "email", "meditation", "status", "booked at"])
+    for r in b:
+        wr.writerow(["booking", r[0], r[1], r[2], r[3], SESSIONS.get(r[4], {}).get("name", r[4]), r[5], r[6]])
+    for r in w:
+        wr.writerow(["waitlist", "", "", r[0], r[1], SESSIONS.get(r[2], {}).get("name", r[2] or "either"), r[3], r[4]])
+    return app.response_class(out.getvalue(), mimetype="text/csv",
+                              headers={"Content-Disposition": "attachment; filename=omvana-booth-bookings.csv"})
 
 
 @app.post("/team/status")
