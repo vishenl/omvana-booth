@@ -24,6 +24,7 @@
 <body><main>
   <h1>Booth team · {{ day }}</h1>
   <p class="muted">{{ bookings|length }} booked · {{ waitlist|selectattr(4, 'equalto', 'waiting')|list|length }} waiting · {{ free|length }} free seats. Reload to refresh. <a href="/team.csv?key={{ key }}" style="color:#fff">Download all as a spreadsheet</a></p>
+  <p class="muted">Booking emails: <b>{{ "on" if emails else "off (no sending key yet)" }}</b>.</p>
   <p class="muted">To cancel a booking, press <b>cancelled</b>: the seat opens on the booking page straight away. <b>no-show</b> keeps a record and lets you give the seat to someone on the waitlist.</p>
 
   <h2>Bookings</h2>

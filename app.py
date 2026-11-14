@@ -27,6 +27,35 @@ SESSIONS = {
 APP_STORE = "https://apps.apple.com/app/id6827573005"
 
 
+SENDGRID_KEY = os.environ.get("SENDGRID_API_KEY", "")
+MAIL_FROM = os.environ.get("MAIL_FROM", "")              # a sender verified in that SendGrid account
+WHERE = "the Omvana booth (Mindvalley, upstairs) at HOLOLIFE Amsterdam"
+
+
+def send_email(to: str, subject: str, text: str) -> bool:
+    """Booking emails through SendGrid. Off (returns False, sends nothing) until SENDGRID_API_KEY and MAIL_FROM are set."""
+    if not (SENDGRID_KEY and MAIL_FROM and to):
+        return False
+    import json as _j, urllib.request as _u
+    body = {"personalizations": [{"to": [{"email": to}]}], "from": {"email": MAIL_FROM, "name": "Omvana"},
+            "subject": subject, "content": [{"type": "text/plain", "value": text}]}
+    req = _u.Request("https://api.sendgrid.com/v3/mail/send", data=_j.dumps(body).encode(),
+                     headers={"Authorization": f"Bearer {SENDGRID_KEY}", "Content-Type": "application/json"})
+    try:
+        _u.urlopen(req, timeout=10)
+        return True
+    except Exception as e:
+        app.logger.warning("email to %s failed: %s", to, e)
+        return False
+
+
+def booked_email(name, slot, sess):
+    s = SESSIONS.get(sess, {})
+    return (f"Hi {name},\n\nYou're booked for {slot} on {DAY}: {s.get('track', '')}, {s.get('name', '')} {s.get('who', '')}.\n\n"
+            f"Come to {WHERE} 5 minutes early. Your seat is held on trust: if you can't make it, reply to this email so "
+            f"someone on the waitlist gets it.\n\nTake it home too: Omvana has 1,000+ meditations curated by Vishen.\n{APP_STORE}\n\nOmvana")
+
+
 def slots():
     t = datetime.strptime(START, "%H:%M")
     return [(t + timedelta(minutes=30 * i)).strftime("%H:%M") for i in range(int(HOURS * 2))]
@@ -84,6 +113,7 @@ def book():
                       (slot, seat, name, email.lower(), sess))
     except psycopg.errors.UniqueViolation:
         return redirect(url_for("home", err=f"Someone just took {slot}. Pick another time.") + "#book")
+    send_email(email, f"You're booked: {slot} at the Omvana booth", booked_email(name, slot, sess))
     return redirect(url_for("home", done="booked", slot=slot) + "#top")
 
 
@@ -94,6 +124,9 @@ def waitlist():
         return redirect(url_for("home", err="Please add your first name and email to join the waitlist.") + "#waitlist")
     with db() as c:
         c.execute("INSERT INTO waitlist (first_name, email, session) VALUES (%s,%s,%s)", (name, email.lower(), sess if sess in SESSIONS else None))
+    send_email(email, "You're on the Omvana booth waitlist",
+               f"Hi {name},\n\nYou're on the waitlist for {DAY}. When a seat frees up, we'll email you and keep it for you at {WHERE}.\n\n"
+               f"Don't want to wait? Omvana has 1,000+ meditations curated by Vishen, and you can start tonight.\n{APP_STORE}\n\nOmvana")
     return redirect(url_for("home", done="waitlist") + "#top")
 
 
@@ -108,7 +141,7 @@ def team():
     with db() as c:
         b = c.execute("SELECT id, slot, seat, first_name, email, session, status FROM bookings ORDER BY slot, seat").fetchall()
         w = c.execute("SELECT id, first_name, email, session, status, created_at FROM waitlist ORDER BY created_at").fetchall()
-    return render_template("team.html", bookings=b, waitlist=w, key=TEAM_KEY, sessions=SESSIONS, day=DAY,
+    return render_template("team.html", bookings=b, waitlist=w, key=TEAM_KEY, sessions=SESSIONS, day=DAY, emails=bool(SENDGRID_KEY and MAIL_FROM),
                            free=[(s, k) for s in slots() for k in range(1, SEATS + 1) if (s, k) not in taken()])
 
 
@@ -156,6 +189,7 @@ def team_promote():
                 c.execute("INSERT INTO bookings (slot, seat, first_name, email, session) VALUES (%s,%s,%s,%s,%s)",
                           (slot, seat, w[0], w[1], w[2] or "6phase"))
                 c.execute("UPDATE waitlist SET status='seated' WHERE id=%s", (wid,))
+                send_email(w[1], f"A seat opened for you: {slot} at the Omvana booth", booked_email(w[0], slot, w[2] or "6phase"))
     return redirect(url_for("team", key=TEAM_KEY))
 
 
